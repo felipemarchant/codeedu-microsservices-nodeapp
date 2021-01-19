@@ -1,0 +1,42 @@
+version: '3'
+services:
+  app:
+    build: 
+      context: node
+    container_name: node_app
+    networks: 
+      - node_net
+    volumes: 
+      - ./node:/usr/src/app
+    depends_on: 
+      - db
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: node_db
+    tty: true
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+      - MYSQL_USER=mysql
+      - MYSQL_PASSWORD=mysql
+      - MYSQL_DATABASE=mysql
+    volumes: 
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/scripts:/docker-entrypoint-initdb.d
+    networks: 
+      - node_net
+  server:
+    image: nginx:stable
+    container_name: node_server
+    depends_on: 
+      - app
+    volumes: 
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks: 
+      - node_net
+    ports: 
+      - "8080:80"
+
+networks: 
+  node_net:
+    driver: bridge
